@@ -1,0 +1,6 @@
+psql -h localhost -U postgres -d postgres -W 
+#Goes into pgs
+
+
+psql -U postgres -d postgres -c "\copy users TO 'users.csv' CSV HEADER"
+psql -U postgres -d postgres -c "\copy groups TO 'groups.csv' CSV HEADER"
