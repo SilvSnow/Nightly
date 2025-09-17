@@ -6,7 +6,7 @@ g5 AS (
     smoking_level, drinking_level, weed_level,
     ideal_group_size, languages, sexuality_inclusive, accessibility_friendly, group_rating
   )
-  VALUES ('19-24', 2, 3, 0, 'Montreal', 3, 6, 4, 6, ARRAY['English','French'], TRUE, TRUE, 4.3)
+  VALUES ('19-24', 2, 3, 0, 'Montreal', 1, 0, 0, 6, ARRAY['English','French'], TRUE, TRUE, 4.3)
   RETURNING id
 ),
 g4 AS (
@@ -15,7 +15,7 @@ g4 AS (
     smoking_level, drinking_level, weed_level,
     ideal_group_size, languages, sexuality_inclusive, accessibility_friendly, group_rating
   )
-  VALUES ('21-27', 2, 1, 1, 'Toronto', 2, 5, 3, 5, ARRAY['English'], FALSE, TRUE, 3.9)
+  VALUES ('21-27', 2, 1, 1, 'Toronto', 0, 1, 1, 5, ARRAY['English'], FALSE, TRUE, 3.9)
   RETURNING id
 ),
 g3 AS (
@@ -24,7 +24,7 @@ g3 AS (
     smoking_level, drinking_level, weed_level,
     ideal_group_size, languages, sexuality_inclusive, accessibility_friendly, group_rating
   )
-  VALUES ('20-25', 1, 2, 0, 'Vancouver', 4, 6, 7, 4, ARRAY['English','Mandarin'], TRUE, FALSE, 4.1)
+  VALUES ('20-25', 1, 2, 0, 'Vancouver', 1, 0, 1, 4, ARRAY['English','Mandarin'], TRUE, FALSE, 4.1)
   RETURNING id
 ),
 g1 AS (
@@ -33,7 +33,7 @@ g1 AS (
     smoking_level, drinking_level, weed_level,
     ideal_group_size, languages, sexuality_inclusive, accessibility_friendly, group_rating
   )
-  VALUES ('22-28', 1, 0, 0, 'Calgary', 1, 3, 2, 2, ARRAY['English'], TRUE, TRUE, 4.0)
+  VALUES ('22-28', 1, 0, 0, 'Calgary', 1, 1, 0, 2, ARRAY['English'], TRUE, TRUE, 4.0)
   RETURNING id
 )
 

@@ -7,6 +7,9 @@ CREATE TABLE users (
     profile_picture_url TEXT,
     password_hash TEXT,         -- or SSO token if using OAuth
     phone_number TEXT,          -- optional
+    drinking_level INT,
+    smoking_level INT,
+    
     is_verified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT now(),
     deleted_at TIMESTAMPTZ

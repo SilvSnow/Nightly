@@ -3,13 +3,12 @@
 CREATE TABLE groups (
     id BIGSERIAL PRIMARY KEY,
     age_range TEXT,                        -- e.g. '19-24'
-    num_men INT DEFAULT 0,
-    num_women INT DEFAULT 0,
-    num_nonbinary INT DEFAULT 0,
+    num_people INT DEFAULT 1,
+    gender_group INT,
     location TEXT,
-    smoking_level INT CHECK (smoking_level BETWEEN 1 AND 10),
-    drinking_level INT CHECK (drinking_level BETWEEN 1 AND 10),
-    weed_level INT CHECK (weed_level BETWEEN 1 AND 10),
+    smoking_level BOOLEAN,
+    drinking_level BOOLEAN,
+    weed_level BOOLEAN,
     ideal_group_size INT,
     languages TEXT[],
     sexuality_inclusive BOOLEAN,
