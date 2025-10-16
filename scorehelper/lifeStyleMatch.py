@@ -1,6 +1,6 @@
-def score(group_a, group_b):
+def lifestyle_score(group_a, group_b):
     """
-    Lifestyle compatibility score (1–100).
+    Lifestyle compatibility score (0–1).
     Considers smoking_level, drinking_level, weed_level (1–10).
     Uses squared difference penalty so larger gaps hurt more.
     """
@@ -22,4 +22,4 @@ def score(group_a, group_b):
     # Average similarity across the three attributes
     avg_sim = sum(sims) / len(sims)
 
-    return int(round(avg_sim * 100))
+    return max(0.0, min(1.0, avg_sim))

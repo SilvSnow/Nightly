@@ -1,21 +1,22 @@
--- Table for user accounts
+-- Enable citext extension for case-insensitive email
+CREATE EXTENSION IF NOT EXISTS citext;
+
 CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
     name TEXT NOT NULL,
-    email CITEXT UNIQUE NOT NULL,
+  email CITEXT UNIQUE NOT NULL,
     age INT CHECK (age >= 13), -- adjust min age as needed
     profile_picture_url TEXT,
-    password_hash TEXT,         -- or SSO token if using OAuth
-    phone_number TEXT,          -- optional
-    drinking_level INT,
-    smoking_level INT,
+  password_hash TEXT,         -- or SSO token if using OAuth
+  phone_number TEXT,          -- optional
+  drinking_level BOOLEAN,
+  smoking_level BOOLEAN,
     
     is_verified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT now(),
     deleted_at TIMESTAMPTZ
 );
 
--- Example: inserting some users
 INSERT INTO users (name, email, age, profile_picture_url, password_hash, phone_number)
 VALUES
   ('Alice Johnson', 'alice@example.com', 21, 'https://cdn.nightly.app/pics/alice.jpg', 'hashed_pw_123', NULL),

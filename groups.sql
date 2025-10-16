@@ -1,16 +1,14 @@
 
--- Step 2: Groups (your simplified version)
 CREATE TABLE groups (
     id BIGSERIAL PRIMARY KEY,
     age_range TEXT,                        -- e.g. '19-24'
     num_people INT DEFAULT 1,
     gender_group INT,
-    location TEXT,
+    location_id INT REFERENCES locations(id), -- Since we'll be changing the specificity of locations, I think we should represent locations with ids
     smoking_level BOOLEAN,
     drinking_level BOOLEAN,
     weed_level BOOLEAN,
     ideal_group_size INT,
-    languages TEXT[],
     sexuality_inclusive BOOLEAN,
     accessibility_friendly BOOLEAN,
     group_rating NUMERIC(2,1),
