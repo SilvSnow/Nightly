@@ -1,4 +1,4 @@
-def score(group_a, group_b):
+def lifeStyleMatchScore(group_a, group_b):
     """
     Lifestyle compatibility score (1–100).
     Considers smoking_level, drinking_level, weed_level (1–10).

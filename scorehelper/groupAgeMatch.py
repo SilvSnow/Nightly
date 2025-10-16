@@ -1,6 +1,7 @@
 def groupAgeMatchScore(group_a, group_b):
     """
     Jaccard overlap of age ranges. Returns 1–100.
+    change up the range
     """
     def parse(age_range):
         lo, hi = age_range.split("-")

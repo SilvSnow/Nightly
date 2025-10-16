@@ -1,4 +1,4 @@
-def score(group_a, group_b):
+def languageMatchScore(group_a, group_b):
     """
     Language compatibility score (1–100).
     - Exact same language set → 100
