@@ -1,4 +1,4 @@
-def groupAgeMatchScore(group_a, group_b):
+def age_overlap_score(group_a, group_b):
     """
     Jaccard overlap of age ranges. Returns 1–100.
     change up the range
@@ -13,5 +13,5 @@ def groupAgeMatchScore(group_a, group_b):
     overlap = max(0, min(a_max, b_max) - max(a_min, b_min))
     union = max(a_max, b_max) - min(a_min, b_min)
     if union == 0:
-        return 1
-    return int((overlap / union) * 100)
+        return 1.0
+    return max(0.0, min(1.0, overlap / union))
