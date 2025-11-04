@@ -1,62 +1,61 @@
--- 1) Create four groups (minimal fields filled to satisfy checks)
-WITH
-g5 AS (
-  INSERT INTO groups (
-    age_range, num_men, num_women, num_nonbinary, location,
-    smoking_level, drinking_level, weed_level,
-    ideal_group_size, languages, sexuality_inclusive, accessibility_friendly, group_rating
-  )
-  VALUES ('19-24', 2, 3, 0, 'Montreal', 1, 0, 0, 6, ARRAY['English','French'], TRUE, TRUE, 4.3)
-  RETURNING id
-),
-g4 AS (
-  INSERT INTO groups (
-    age_range, num_men, num_women, num_nonbinary, location,
-    smoking_level, drinking_level, weed_level,
-    ideal_group_size, languages, sexuality_inclusive, accessibility_friendly, group_rating
-  )
-  VALUES ('21-27', 2, 1, 1, 'Toronto', 0, 1, 1, 5, ARRAY['English'], FALSE, TRUE, 3.9)
-  RETURNING id
-),
-g3 AS (
-  INSERT INTO groups (
-    age_range, num_men, num_women, num_nonbinary, location,
-    smoking_level, drinking_level, weed_level,
-    ideal_group_size, languages, sexuality_inclusive, accessibility_friendly, group_rating
-  )
-  VALUES ('20-25', 1, 2, 0, 'Vancouver', 1, 0, 1, 4, ARRAY['English','Mandarin'], TRUE, FALSE, 4.1)
-  RETURNING id
-),
-g1 AS (
-  INSERT INTO groups (
-    age_range, num_men, num_women, num_nonbinary, location,
-    smoking_level, drinking_level, weed_level,
-    ideal_group_size, languages, sexuality_inclusive, accessibility_friendly, group_rating
-  )
-  VALUES ('22-28', 1, 0, 0, 'Calgary', 1, 1, 0, 2, ARRAY['English'], TRUE, TRUE, 4.0)
-  RETURNING id
+-- =====================================================
+-- SIMPLE WORKING GROUP CREATION SCRIPT
+-- =====================================================
+
+-- (optional cleanup)
+TRUNCATE groups RESTART IDENTITY CASCADE;
+
+-- 1️⃣  Create five groups
+INSERT INTO groups (
+  age_range, num_people, gender_group,
+  location,
+  smoking_level, drinking_level, weed_level,
+  ideal_group_size,
+  languages,
+  sexuality_inclusive, accessibility_friendly,
+  special_selections,
+  group_rating
 )
+VALUES
+  ('19-24', 0, 3, 'Montreal',   2, 7, 5, 5, ARRAY['English','French'], TRUE,  TRUE,  2, 4.4),
+  ('20-26', 0, 3, 'Toronto',    1, 5, 3, 6, ARRAY['English'],          TRUE,  TRUE,  4, 4.0),
+  ('21-27', 0, 3, 'Vancouver',  4, 6, 7, 7, ARRAY['English','Mandarin'], TRUE, FALSE, 3, 4.2),
+  ('22-28', 0, 3, 'Calgary',    0, 3, 2, 8, ARRAY['English'],          TRUE,  TRUE,  1, 3.9),
+  ('19-25', 0, 3, 'Ottawa',     5, 2, 6, 9, ARRAY['English','French'], FALSE, TRUE,  2, 4.1);
 
--- 2) Link users to the groups 
+-- 2️⃣  Grab the five new group IDs
+WITH g AS (
+  SELECT id, ROW_NUMBER() OVER (ORDER BY id) AS gidx
+  FROM groups
+  ORDER BY id DESC
+  LIMIT 5
+),
+u AS (
+  SELECT id AS user_id, ROW_NUMBER() OVER (ORDER BY random()) AS rn
+  FROM users
+  LIMIT 26
+)
+-- 3️⃣  Distribute 26 users into 5 groups
 INSERT INTO group_memberships (group_id, user_id)
-SELECT (SELECT id FROM g5), u.id FROM users u WHERE u.email IN
-  ('alice@example.com','ben@example.com','chloe@example.com','david.kim@example.com','ella.martinez@example.com')
-UNION ALL
-SELECT (SELECT id FROM g4), u.id FROM users u WHERE u.email IN
-  ('farah.ahmed@example.com','george.brown@example.com','hannah.wang@example.com','ivan.petrov@example.com')
-UNION ALL
-SELECT (SELECT id FROM g3), u.id FROM users u WHERE u.email IN
-  ('jasmine.lee@example.com','kevin.oconnor@example.com','lina.rossi@example.com')
-UNION ALL
-SELECT (SELECT id FROM g1), u.id FROM users u WHERE u.email IN
-  ('mohammed.ali@example.com');
-
--- 3) (Optional) Quick verification: group sizes + member names
 SELECT
-  gm.group_id,
-  COUNT(*) AS member_count,
-  ARRAY_AGG(u.name ORDER BY u.name) AS members
-FROM group_memberships gm
-JOIN users u ON u.id = gm.user_id
-GROUP BY gm.group_id
-ORDER BY member_count DESC, gm.group_id;
+  CASE
+    WHEN rn BETWEEN  1 AND  4 THEN (SELECT id FROM g WHERE gidx = 1)
+    WHEN rn BETWEEN  5 AND  8 THEN (SELECT id FROM g WHERE gidx = 2)
+    WHEN rn BETWEEN  9 AND 13 THEN (SELECT id FROM g WHERE gidx = 3)
+    WHEN rn BETWEEN 14 AND 19 THEN (SELECT id FROM g WHERE gidx = 4)
+    WHEN rn BETWEEN 20 AND 26 THEN (SELECT id FROM g WHERE gidx = 5)
+  END AS group_id,
+  user_id
+FROM u;
+
+-- 4️⃣  Verify everything
+SELECT
+  g.id AS group_id,
+  g.location,
+  COUNT(gm.user_id) AS members,
+  ARRAY_AGG(u.name ORDER BY u.name) AS member_names
+FROM groups g
+LEFT JOIN group_memberships gm ON g.id = gm.group_id
+LEFT JOIN users u ON gm.user_id = u.id
+GROUP BY g.id, g.location
+ORDER BY g.id;

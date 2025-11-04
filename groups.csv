@@ -1,5 +1,6 @@
-id,age_range,num_men,num_women,num_nonbinary,location,smoking_level,drinking_level,weed_level,ideal_group_size,languages,sexuality_inclusive,accessibility_friendly,group_rating,created_at
-1,19-24,2,3,0,1,3,6,4,6,"{English,French}",t,t,4.3,2025-09-06 18:13:31.904642-04
-2,21-27,2,1,1,2,2,5,3,5,{English},f,t,3.9,2025-09-06 18:13:31.904642-04
-3,20-25,1,2,0,1,4,6,7,4,"{English,Mandarin}",t,f,4.1,2025-09-06 18:13:31.904642-04
-4,22-28,1,0,0,2,1,3,2,2,{English},t,t,4.0,2025-09-06 18:13:31.904642-04
+id,age_range,num_people,gender_group,location,smoking_level,drinking_level,weed_level,ideal_group_size,languages,sexuality_inclusive,accessibility_friendly,special_selections,group_rating,created_at
+1,21-25,4,3,Montreal,2,7,5,5,"{English,French}",t,t,2,4.4,2025-10-15 20:25:43.192179-04
+2,20-27,4,3,Toronto,1,5,3,6,{English},t,t,4,4.0,2025-10-15 20:25:43.192179-04
+3,19-26,5,3,Vancouver,4,6,7,7,"{English,Mandarin}",t,f,3,4.2,2025-10-15 20:25:43.192179-04
+4,20-26,6,3,Calgary,0,3,2,8,{English},t,t,1,3.9,2025-10-15 20:25:43.192179-04
+5,20-24,7,3,Ottawa,5,2,6,9,"{English,French}",f,t,2,4.1,2025-10-15 20:25:43.192179-04

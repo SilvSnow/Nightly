@@ -1,4 +1,4 @@
-def score(group_a, group_b):
+def badgeMatchScore(group_a, group_b):
     """
     Badge compatibility score (1–100).
     Full score if both groups match on the sexuality_inclusive badge
