@@ -9,7 +9,6 @@ CREATE TABLE groups (
     drinking_level INT,
     weed_level INT, -- 0-10 (0-5 stars with half stars)
     ideal_group_size INT,
-    languages TEXT[],
     sexuality_inclusive BOOLEAN,
     accessibility_friendly BOOLEAN,
     special_selections INT, --from 1-4, using binary mapping wherer 1=men 2=mixed 3=women 4=none 
