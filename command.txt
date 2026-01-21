@@ -1,9 +1,37 @@
-psql -h localhost -U postgres -d postgres -W 
-#Goes into pgs
+## PostgreSQL Setup Commands
 
-\i ./groups.sql
-\i ./users.sql
-\i ./creategroups.sql
-psql -U postgres -d postgres -c "\copy users TO 'users.csv' CSV HEADER"
-psql -U postgres -d postgres -c "\copy groups TO 'groups.csv' CSV HEADER"
-psql -U postgres -d postgres -c "\copy group_memberships TO 'group_memberships.csv' CSV HEADER"
+# 1. Run full matching setup (creates tables, functions, and view)
+psql -h localhost -U postgres -d postgres -f setup_matching.sql
+
+# 2. Interactive mode
+psql -h localhost -U postgres -d postgres
+
+## Useful Queries (run in psql):
+
+# View all match scores
+SELECT * FROM match_scores;
+
+# Top matches for a specific group
+SELECT * FROM match_scores WHERE group_a = 1 OR group_b = 1 ORDER BY match_score DESC;
+
+# View pairs with threshold penalties applied
+SELECT group_a, group_b, match_score, age_score, penalty FROM match_scores WHERE penalty < 1.0;
+
+# Montreal area groups only
+SELECT * FROM match_scores
+WHERE group_a IN (SELECT id FROM groups WHERE target_lat BETWEEN 45.4 AND 45.7)
+  AND group_b IN (SELECT id FROM groups WHERE target_lat BETWEEN 45.4 AND 45.7);
+
+# Group details with languages
+SELECT g.id, g.age_range, g.ideal_activity, g.travel_radius_km,
+       STRING_AGG(l.name, ', ') as languages
+FROM groups g
+LEFT JOIN group_languages gl ON g.id = gl.group_id
+LEFT JOIN languages l ON gl.language_id = l.id
+GROUP BY g.id ORDER BY g.id;
+
+# Test distance function
+SELECT haversine(45.5017, -73.5673, 45.6066, -73.7124) as montreal_to_laval_km;
+
+## Export results
+# \copy (SELECT * FROM match_scores) TO 'match_results.csv' CSV HEADER
