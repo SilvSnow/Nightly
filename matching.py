@@ -1,7 +1,7 @@
 import math
 import pandas as pd
 from itertools import combinations
-from scorehelper.locationMatch import location_match
+from scorehelper.locationMatch import best_location_match
 from scorehelper.groupSizeMatch import size_compat, groupSizeMatchScore
 from scorehelper.groupAgeMatch import age_overlap_score
 from scorehelper.lifeStyleMatch import lifeStyleMatchScore as lifestyle_score
@@ -26,6 +26,7 @@ SCORE_THRESHOLDS = {
     "lifestyle": 0.4,  # Lifestyle compatibility is important
     "size": 0.5,       # Group sizes should be reasonable
     "activity": 0.4,   # Activity alignment matters
+    "languages": 0.3,  # Must share at least one language
 }
 
 def apply_threshold_penalty(scores: dict) -> float:
@@ -64,7 +65,6 @@ def compute_pair_scores(groups_df: pd.DataFrame,
     w = (weights or DEFAULT_WEIGHTS).copy()
     required = [
         "id","age_range","num_people",
-        "target_lat","target_lon","travel_radius_km",
         "smoking_level","drinking_level","weed_level","ideal_group_size",
         "sexuality_inclusive","accessibility_friendly","group_rating"
     ]
@@ -84,8 +84,8 @@ def compute_pair_scores(groups_df: pd.DataFrame,
     for a_id, b_id in combinations(sorted(by_id.keys()), 2):
         a, b = by_id[a_id], by_id[b_id]
 
-        # Location matching based on travel radius intersection
-        loc_score, distance_km = location_match(a, b)
+        # Location matching based on travel radius intersection (best pair)
+        loc_score, distance_km = best_location_match(a, b)
         if loc_score is None:
             continue  # Beyond 1.5x combined radius - no match
 
@@ -100,15 +100,13 @@ def compute_pair_scores(groups_df: pd.DataFrame,
         inc_acc = badge_score(a, b)
         rate = badge_score(a, b)
 
-        # Calculate combined travel radius for explainability
-        combined_radius = a["travel_radius_km"] + b["travel_radius_km"]
-
         # Collect scores for threshold penalty calculation
         sub_scores = {
             "size": size_score,
             "age": age_score,
             "lifestyle": life_score,
             "activity": activity_score,
+            "languages": lang_score,
         }
 
         # Calculate base weighted score
@@ -131,7 +129,6 @@ def compute_pair_scores(groups_df: pd.DataFrame,
             "a_id": a_id, "b_id": b_id,
             "match_score": round(match_score, 1),
             "distance_km": round(distance_km, 1),
-            "combined_radius_km": round(combined_radius, 1),
             "size_score": round(size_score, 3),
             "age_score": round(age_score, 3),
             "lifestyle_score": round(life_score, 3),
