@@ -68,10 +68,18 @@ def get_db():
 # Pydantic Models
 # ============================================
 
-class GroupActivate(BaseModel):
+class TargetLocation(BaseModel):
+    label: Optional[str] = None
     target_lat: float
     target_lon: float
-    travel_radius_km: float
+    travel_radius_km: float = 15.0
+
+
+class GroupActivate(BaseModel):
+    target_lat: Optional[float] = None
+    target_lon: Optional[float] = None
+    travel_radius_km: Optional[float] = None
+    locations: Optional[List[TargetLocation]] = None
     ideal_activity: str
     active_until: datetime
 
@@ -225,6 +233,31 @@ def get_me(current_user: dict = Depends(get_current_user)):
     return UserResponse(**user)
 
 
+class UserPreferences(BaseModel):
+    drinking_level: Optional[int] = None
+    smoking_level: Optional[int] = None
+    weed_level: Optional[int] = None
+    language_ids: Optional[List[int]] = None
+
+
+@app.post("/api/users/me/preferences")
+def update_preferences(data: UserPreferences, current_user: dict = Depends(get_current_user)):
+    """Update user preferences (drinking, smoking, weed, languages)."""
+    with get_db() as conn:
+        cur = conn.cursor()
+
+        # Update user preferences
+        cur.execute("""
+            UPDATE users SET
+                drinking_level = COALESCE(%s, drinking_level),
+                smoking_level = COALESCE(%s, smoking_level),
+                weed_level = COALESCE(%s, weed_level)
+            WHERE id = %s
+        """, (data.drinking_level, data.smoking_level, data.weed_level, current_user['user_id']))
+
+    return {"message": "Preferences updated"}
+
+
 class GroupCreate(BaseModel):
     target_lat: Optional[float] = None
     target_lon: Optional[float] = None
@@ -257,18 +290,31 @@ def create_group(data: GroupCreate, current_user: dict = Depends(get_current_use
     with get_db() as conn:
         cur = conn.cursor()
 
-        # Create group
+        # Get user info for group defaults
+        cur.execute("""
+            SELECT age, drinking_level, smoking_level, weed_level
+            FROM users WHERE id = %s
+        """, (current_user['user_id'],))
+        user = cur.fetchone()
+        user_age = user['age'] if user else 21
+        age_range = f"{user_age}-{user_age}"
+
+        # Create group with user's data
         cur.execute("""
             INSERT INTO groups (
                 target_lat, target_lon, travel_radius_km, ideal_activity,
                 ideal_group_size, sexuality_inclusive, accessibility_friendly,
-                num_people, age_range
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, 1, '18-99')
+                num_people, age_range, drinking_level, smoking_level, weed_level
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, 1, %s, %s, %s, %s)
             RETURNING id
         """, (
             data.target_lat, data.target_lon, data.travel_radius_km,
             data.ideal_activity, data.ideal_group_size,
-            data.sexuality_inclusive, data.accessibility_friendly
+            data.sexuality_inclusive, data.accessibility_friendly,
+            age_range,
+            user['drinking_level'] if user else 5,
+            user['smoking_level'] if user else 1,
+            user['weed_level'] if user else 1,
         ))
         group_id = cur.fetchone()['id']
 
@@ -392,12 +438,29 @@ def verify_group_membership(cur, group_id: int, user_id: int):
 @app.post("/api/groups/{group_id}/activate")
 def activate_group(group_id: int, data: GroupActivate, current_user: dict = Depends(get_current_user)):
     """Mark a group as active for tonight."""
+    # Normalize to locations list
+    if data.locations:
+        locations = data.locations
+    elif data.target_lat is not None and data.target_lon is not None:
+        locations = [TargetLocation(
+            target_lat=data.target_lat,
+            target_lon=data.target_lon,
+            travel_radius_km=data.travel_radius_km or 15.0,
+        )]
+    else:
+        raise HTTPException(status_code=400, detail="Provide 'locations' or legacy lat/lon fields")
+
+    if len(locations) < 1 or len(locations) > 5:
+        raise HTTPException(status_code=400, detail="Must have between 1 and 5 locations")
+
     with get_db() as conn:
         cur = conn.cursor()
 
         verify_group_membership(cur, group_id, current_user['user_id'])
 
-        # Update group with activation data
+        first = locations[0]
+
+        # Update group with activation data (legacy columns use first location)
         cur.execute("""
             UPDATE groups SET
                 target_lat = %s,
@@ -408,9 +471,9 @@ def activate_group(group_id: int, data: GroupActivate, current_user: dict = Depe
             WHERE id = %s
             RETURNING id
         """, (
-            data.target_lat,
-            data.target_lon,
-            data.travel_radius_km,
+            first.target_lat,
+            first.target_lon,
+            first.travel_radius_km,
             data.ideal_activity,
             data.active_until,
             group_id
@@ -418,6 +481,14 @@ def activate_group(group_id: int, data: GroupActivate, current_user: dict = Depe
 
         if cur.fetchone() is None:
             raise HTTPException(status_code=404, detail="Group not found")
+
+        # Replace group_locations (delete-then-insert)
+        cur.execute("DELETE FROM group_locations WHERE group_id = %s", (group_id,))
+        for loc in locations:
+            cur.execute("""
+                INSERT INTO group_locations (group_id, label, target_lat, target_lon, travel_radius_km)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (group_id, loc.label, loc.target_lat, loc.target_lon, loc.travel_radius_km))
 
         # Count potential matches
         cur.execute("""
@@ -451,7 +522,28 @@ def deactivate_group(group_id: int, current_user: dict = Depends(get_current_use
         if cur.fetchone() is None:
             raise HTTPException(status_code=404, detail="Group not found")
 
+        cur.execute("DELETE FROM group_locations WHERE group_id = %s", (group_id,))
+
     return {"status": "deactivated", "group_id": group_id}
+
+
+@app.get("/api/groups/{group_id}/locations")
+def get_group_locations(group_id: int, current_user: dict = Depends(get_current_user)):
+    """Get all target locations for a group."""
+    with get_db() as conn:
+        cur = conn.cursor()
+
+        verify_group_membership(cur, group_id, current_user['user_id'])
+
+        cur.execute("""
+            SELECT id, label, target_lat, target_lon, travel_radius_km, created_at
+            FROM group_locations
+            WHERE group_id = %s
+            ORDER BY id
+        """, (group_id,))
+        locations = cur.fetchall()
+
+    return [dict(loc) for loc in locations]
 
 
 @app.get("/api/groups/{group_id}/matches", response_model=List[MatchResponse])
@@ -465,19 +557,21 @@ def get_matches(group_id: int, limit: int = 20, offset: int = 0, current_user: d
         # Get matches from the view (only active groups)
         cur.execute("""
             SELECT
-                CASE WHEN group_a = %s THEN group_b ELSE group_a END as matched_group_id,
-                match_score,
-                distance_km,
-                location_score,
-                age_score,
-                lifestyle_score,
-                activity_score,
-                lang_score
-            FROM match_scores
-            WHERE (group_a = %s OR group_b = %s)
-            ORDER BY match_score DESC
+                CASE WHEN ms.group_a = %s THEN ms.group_b ELSE ms.group_a END as matched_group_id,
+                ms.match_score,
+                ms.distance_km,
+                ms.location_score,
+                ms.age_score,
+                ms.lifestyle_score,
+                ms.activity_score,
+                ms.lang_score
+            FROM match_scores ms
+            JOIN groups g ON g.id = CASE WHEN ms.group_a = %s THEN ms.group_b ELSE ms.group_a END
+            WHERE (ms.group_a = %s OR ms.group_b = %s)
+              AND g.active_until > NOW()
+            ORDER BY ms.match_score DESC
             LIMIT %s OFFSET %s
-        """, (group_id, group_id, group_id, limit, offset))
+        """, (group_id, group_id, group_id, group_id, limit, offset))
 
         matches = cur.fetchall()
 
@@ -590,8 +684,14 @@ def get_mutual_matches(group_id: int, current_user: dict = Depends(get_current_u
 
         # Find mutual matches
         cur.execute("""
-            SELECT g.id, g.age_range, g.num_people, g.ideal_activity,
-                   ms.match_score, ms.distance_km
+            SELECT g.id as group_id, g.age_range, g.num_people, g.ideal_activity,
+                   COALESCE(ms.match_score, 80) as match_score,
+                   COALESCE(ms.distance_km, 0) as distance_km,
+                   COALESCE(ms.location_score, 0.8) as location_score,
+                   COALESCE(ms.age_score, 0.8) as age_score,
+                   COALESCE(ms.lifestyle_score, 0.8) as lifestyle_score,
+                   COALESCE(ms.activity_score, 0.8) as activity_score,
+                   COALESCE(ms.lang_score, 0.8) as lang_score
             FROM group_likes l1
             JOIN group_likes l2 ON l1.liked_id = l2.liker_id AND l1.liker_id = l2.liked_id
             JOIN groups g ON g.id = l1.liked_id
@@ -604,6 +704,37 @@ def get_mutual_matches(group_id: int, current_user: dict = Depends(get_current_u
         mutual = cur.fetchall()
 
     return [dict(m) for m in mutual]
+
+
+@app.get("/api/groups/{group_id}/preview")
+def get_group_preview(group_id: int, current_user: dict = Depends(get_current_user)):
+    """Get public preview of a group (for viewing matched groups)."""
+    with get_db() as conn:
+        cur = conn.cursor()
+
+        # Get group info
+        cur.execute("""
+            SELECT id, age_range, num_people, ideal_activity, target_lat, target_lon
+            FROM groups WHERE id = %s
+        """, (group_id,))
+        group = cur.fetchone()
+
+        if not group:
+            raise HTTPException(status_code=404, detail="Group not found")
+
+        # Get members (limited info for privacy)
+        cur.execute("""
+            SELECT u.name, u.age, u.gender
+            FROM users u
+            JOIN group_memberships gm ON u.id = gm.user_id
+            WHERE gm.group_id = %s
+        """, (group_id,))
+        members = cur.fetchall()
+
+    return {
+        "group": dict(group),
+        "members": [dict(m) for m in members]
+    }
 
 
 # ============================================
@@ -628,6 +759,21 @@ def debug_match_scores(limit: int = 10):
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute(f"SELECT * FROM match_scores LIMIT {limit}")
+        return cur.fetchall()
+
+
+@app.get("/api/debug/groups")
+def debug_groups():
+    """Debug endpoint to view all groups and their status."""
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT id, age_range, num_people, target_lat, target_lon,
+                   travel_radius_km, ideal_activity, active_until,
+                   CASE WHEN active_until > NOW() THEN true ELSE false END as is_active
+            FROM groups
+            ORDER BY id
+        """)
         return cur.fetchall()
 
 

@@ -70,3 +70,41 @@ def location_match(group_a: dict, group_b: dict) -> tuple[float, float] | tuple[
         score = 0.8 * math.exp(-4 * overshoot)
 
     return max(0.0, min(1.0, score)), distance
+
+
+def best_location_match(group_a: dict, group_b: dict) -> tuple[float, float] | tuple[None, float]:
+    """
+    Find the best location match across all location pairs between two groups.
+
+    Each group may have a 'locations' key containing a list of
+    {target_lat, target_lon, travel_radius_km} dicts. If missing, falls back
+    to flat target_lat/target_lon/travel_radius_km fields on the group dict.
+
+    Returns the pair with the highest score: (best_score, best_distance)
+    or (None, best_distance) if no pair matches.
+    """
+    locs_a = group_a.get("locations")
+    if not locs_a:
+        locs_a = [{"target_lat": group_a["target_lat"],
+                    "target_lon": group_a["target_lon"],
+                    "travel_radius_km": group_a["travel_radius_km"]}]
+
+    locs_b = group_b.get("locations")
+    if not locs_b:
+        locs_b = [{"target_lat": group_b["target_lat"],
+                    "target_lon": group_b["target_lon"],
+                    "travel_radius_km": group_b["travel_radius_km"]}]
+
+    best_score = None
+    best_distance = float("inf")
+
+    for la in locs_a:
+        for lb in locs_b:
+            score, dist = location_match(la, lb)
+            if score is not None and (best_score is None or score > best_score):
+                best_score = score
+                best_distance = dist
+            elif best_score is None and dist < best_distance:
+                best_distance = dist
+
+    return best_score, best_distance
