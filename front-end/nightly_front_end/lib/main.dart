@@ -1,4 +1,8 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:nightly_front_end/create_account_page.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,26 +15,25 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
+
+        textTheme: GoogleFonts.urbanistTextTheme(
+          Theme.of(context).textTheme,
+        ),
+        
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            elevation: 0,
+            shadowColor: Colors.transparent,
+            splashFactory: NoSplash.splashFactory,
+          ),
+        ),
+
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: ''),
     );
   }
 }
@@ -54,69 +57,204 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  // int _counter = 0;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  // void _incrementCounter() {
+  //   setState(() {
+  //     // This call to setState tells the Flutter framework that something has
+  //     // changed in this State, which causes it to rerun the build method below
+  //     // so that the display can reflect the updated values. If we changed
+  //     // _counter without calling setState(), then the build method would not be
+  //     // called again, and so nothing would appear to happen.
+  //     _counter++;
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
+      resizeToAvoidBottomInset: false,
+      // Extend the body behind the AppBar so the gradient hits the top of the phone
+      extendBodyBehindAppBar: true, 
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
+        backgroundColor: Colors.transparent, // Makes the bar clear
+        elevation: 0, // Removes the shadow
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+      
+      body: Stack(
+        children: [
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/gradient.webp'),
+                fit: BoxFit.cover,
+              ),
             ),
-          ],
-        ),
+          ),
+        
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 90.0), // Adjust spacing from the top
+                child: Image.asset(
+                  'assets/images/logo.webp',
+                  width: 240, // Set the width of your logo
+                ),
+              ),
+            ),
+          ),
+
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center, 
+              children: [
+                // const Text(
+                //   'Test text',
+                //   style: TextStyle(color: Colors.white, fontSize: 24),
+                // ),
+                // Text(
+                //   '$_counter',
+                //   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                //         color: Colors.white,
+                //       ),
+                // ),
+              ],
+            ),
+          ),
+
+          // TERMS & PRIVACY TEXT
+          Positioned(
+            bottom: 215.0, // Positioned above the buttons
+            left: 40.0,
+            right: 40.0,
+            child: RichText(
+              textAlign: TextAlign.center,
+              text: TextSpan(
+                style: GoogleFonts.urbanist(
+                  fontSize: 14,
+                  color: Colors.white,
+                  height: 1.5, // Line height for readability
+                ),
+                children: [
+                  const TextSpan(text: 'By tapping “Sign in” / “Create Account”, you agree to our '),
+                  TextSpan(
+                    text: 'Terms',
+                    style: const TextStyle(fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () async {
+                        const url = 'https://www.cs.mcgill.ca/~jvybihal/index.php';
+                        if (!await launchUrl(Uri.parse(url))) {
+                          throw Exception('Could not launch $url');
+                        }
+                      },
+                  ),
+                  const TextSpan(text: '. Learn how your data is processed in our '),
+                  TextSpan(
+                    text: 'Privacy Policy',
+                    style: const TextStyle(fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () async {
+                        const url = 'https://www.cs.mcgill.ca/~jvybihal/index.php';
+                        if (!await launchUrl(Uri.parse(url))) {
+                          throw Exception('Could not launch $url');
+                        }
+                      },
+                  ),
+                  const TextSpan(text: ' and '),
+                  TextSpan(
+                    text: 'Cookies Policy',
+                    style: const TextStyle(fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () async {
+                        const url = 'https://www.cs.mcgill.ca/~jvybihal/index.php';
+                        if (!await launchUrl(Uri.parse(url))) {
+                          throw Exception('Could not launch $url');
+                        }
+                      },
+                  ),
+                  const TextSpan(text: '.'),
+                ],
+              ),
+            ),
+          ),
+
+          // CREATE ACCOUNT BUTTON
+          Positioned(
+            bottom: 135.0, // Distance from the bottom of the screen
+            left: 40.0,   // Distance from the left side
+            right: 40.0,  // Distance from the right side
+            child: SizedBox(
+              height: 60, // Height of the button
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const CreateAccountPage()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFE06073),
+                  foregroundColor: Colors.white, // Text color
+                  shape: const StadiumBorder(), // This creates the "Oval/Pill" shape automatically
+                ),
+                child: const Text(
+                  'Create Account',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          
+
+          // SIGN IN BUTTON
+          Positioned(
+            bottom: 50.0, // Distance from the bottom of the screen
+            left: 40.0,   // Distance from the left side
+            right: 40.0,  // Distance from the right side
+            child: SizedBox(
+              height: 60, // Height of the button
+              child: ElevatedButton(
+                onPressed: () {
+                  print("Button Pressed!");
+                },
+                style: ElevatedButton.styleFrom(
+                  side: const BorderSide(
+                    color: const Color(0xFFE06073), // The stroke color
+                    width: 2.0,        // The stroke width
+                  ),
+                  backgroundColor: const Color(0xFFE06073).withOpacity(0),
+
+                  foregroundColor: Colors.white, // Text color
+                  shape: const StadiumBorder(), // This creates the "Oval/Pill" shape automatically
+                ),
+                child: const Text(
+                  'Sign In',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+        ]
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
+
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: _incrementCounter,
+      //   tooltip: 'Increment',
+      //   child: const Icon(Icons.add),
+      // ),
     );
   }
 }
