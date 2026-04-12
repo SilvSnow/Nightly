@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:nightly_front_end/moon_swipe_tab.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -16,7 +17,8 @@ class _DashboardPageState extends State<DashboardPage>
   late final Animation<double> _contentY;
   late final Animation<double> _topY;
   late final Animation<double> _bottomY;
-  late final Animation<double> _fabScale;
+
+  int _selectedTabIndex = 0;
 
   @override
   void initState() {
@@ -48,12 +50,6 @@ class _DashboardPageState extends State<DashboardPage>
         curve: const Interval(0.18, 0.9, curve: Curves.easeOutCubic),
       ),
     );
-    _fabScale = Tween<double>(begin: 0.6, end: 1).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.25, 1, curve: Curves.elasticOut),
-      ),
-    );
 
     _controller.forward();
   }
@@ -64,12 +60,53 @@ class _DashboardPageState extends State<DashboardPage>
     super.dispose();
   }
 
+  Widget _buildTabContent() {
+    switch (_selectedTabIndex) {
+      case 0:
+        return const MoonSwipeTab();
+      case 1:
+        return _PlaceholderTab(
+          title: 'Messages',
+          subtitle: 'Your conversations will appear here.',
+          icon: LucideIcons.messageCircle,
+        );
+      case 2:
+        return _PlaceholderTab(
+          title: 'Likes',
+          subtitle: 'Groups you liked will appear here.',
+          icon: LucideIcons.heart,
+        );
+      case 3:
+        return _PlaceholderTab(
+          title: 'Profile',
+          subtitle: 'Your account details will appear here.',
+          icon: LucideIcons.user,
+        );
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  Widget _buildNavIcon({required int index, required IconData icon}) {
+    final isSelected = _selectedTabIndex == index;
+
+    return IconButton(
+      onPressed: () {
+        if (_selectedTabIndex == index) return;
+        setState(() {
+          _selectedTabIndex = index;
+        });
+      },
+      icon: Icon(
+        icon,
+        size: 34,
+        color: isSelected ? const Color(0xFF89247B) : const Color(0xFFCFA4C8),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    const double hotbarHeight = 82;
-    const double hotbarBottomInset = 19;
-    const double fabInset = 20;
-
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -79,127 +116,72 @@ class _DashboardPageState extends State<DashboardPage>
             bottom: false,
             child: Opacity(
               opacity: _fade.value,
-              child: Stack(
+              child: Column(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 19),
-                    child: Column(
-                      children: [
-                      Transform.translate(
-                        offset: Offset(0, _topY.value),
-                        child: SizedBox(
-                          height: 68,
-                          child: Row(
-                            children: [
-                              const SizedBox(width: 22),
-                              Expanded(
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    'Dashboard',
-                                    style: GoogleFonts.urbanist(
-                                      fontSize: 38,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.black,
-                                    ),
-                                  ),
+                  Transform.translate(
+                    offset: Offset(0, _topY.value),
+                    child: SizedBox(
+                      height: 68,
+                      child: Row(
+                        children: [
+                          const SizedBox(width: 22),
+                          Expanded(
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'Dashboard',
+                                style: GoogleFonts.urbanist(
+                                  fontSize: 38,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black,
                                 ),
-                              ),
-                              SizedBox(
-                                width: 56,
-                                child: Center(
-                                  child: const Icon(
-                                    LucideIcons.inbox,
-                                    size: 30,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Divider(
-                        height: 1,
-                        thickness: 1,
-                        color: Colors.grey.shade300,
-                      ),
-                      Expanded(
-                        child: Transform.translate(
-                          offset: Offset(0, _contentY.value),
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(34, 48, 34, 0),
-                            child: Text(
-                              'Create a new group to start\nmaking friends!',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.urbanist(
-                                fontSize: 25,
-                                color: Colors.grey.shade500,
-                                height: 1.3,
                               ),
                             ),
                           ),
-                        ),
-                      ),
-                        Transform.translate(
-                          offset: Offset(0, _bottomY.value),
-                          child: Container(
-                          height: 82,
-                          decoration: BoxDecoration(
-                            border: Border(
-                              top: BorderSide(
-                                color: Colors.grey.shade300,
-                                width: 1,
+                          SizedBox(
+                            width: 56,
+                            child: Center(
+                              child: const Icon(
+                                LucideIcons.inbox,
+                                size: 30,
+                                color: Colors.black,
                               ),
                             ),
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: const [
-                              Icon(
-                                LucideIcons.messageCircle,
-                                color: Color(0xFF89247B),
-                                size: 34,
-                              ),
-                              Icon(
-                                LucideIcons.moon,
-                                color: Color(0xFF89247B),
-                                size: 34,
-                              ),
-                              Icon(
-                                LucideIcons.heart,
-                                color: Color(0xFF89247B),
-                                size: 34,
-                              ),
-                              Icon(
-                                LucideIcons.user,
-                                color: Color(0xFF89247B),
-                                size: 34,
-                              ),
-                            ],
-                          ),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                  Positioned(
-                    right: fabInset,
-                    bottom: hotbarHeight + hotbarBottomInset + fabInset,
-                    child: Transform.scale(
-                      scale: _fabScale.value,
-                      child: Container(
-                        width: 72,
-                        height: 72,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Color(0xFF89247B),
+                  Divider(height: 1, thickness: 1, color: Colors.grey.shade300),
+                  Expanded(
+                    child: Transform.translate(
+                      offset: Offset(0, _contentY.value),
+                      child: _buildTabContent(),
+                    ),
+                  ),
+                  Transform.translate(
+                    offset: Offset(0, _bottomY.value),
+                    child: Container(
+                      height: 82,
+                      decoration: BoxDecoration(
+                        border: Border(
+                          top: BorderSide(
+                            color: Colors.grey.shade300,
+                            width: 1,
+                          ),
                         ),
-                        child: const Icon(
-                          Icons.add,
-                          color: Colors.white,
-                          size: 44,
-                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildNavIcon(index: 0, icon: LucideIcons.moon),
+                          _buildNavIcon(
+                            index: 1,
+                            icon: LucideIcons.messageCircle,
+                          ),
+                          _buildNavIcon(index: 2, icon: LucideIcons.heart),
+                          _buildNavIcon(index: 3, icon: LucideIcons.user),
+                        ],
                       ),
                     ),
                   ),
@@ -209,6 +191,52 @@ class _DashboardPageState extends State<DashboardPage>
           ),
         );
       },
+    );
+  }
+}
+
+class _PlaceholderTab extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+
+  const _PlaceholderTab({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 36),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 44, color: const Color(0xFF89247B)),
+            const SizedBox(height: 14),
+            Text(
+              title,
+              style: GoogleFonts.urbanist(
+                fontSize: 27,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF333333),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.urbanist(
+                fontSize: 18,
+                color: const Color(0xFF888888),
+                height: 1.3,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

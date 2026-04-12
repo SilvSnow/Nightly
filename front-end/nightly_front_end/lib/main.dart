@@ -3,10 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:nightly_front_end/create_account_page.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: 'https://jzdvxqfvxbfosbbrqdgh.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp6ZHZ4cWZ2eGJmb3NiYnJxZGdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMzIzNzYsImV4cCI6MjA4ODYwODM3Nn0.iftZLUAWirIUbrHeaD55oXncgMNVoe9eSkzarkLWGXs',
+  );
+
   runApp(const MyApp());
 }
+final supabase = Supabase.instance.client;
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

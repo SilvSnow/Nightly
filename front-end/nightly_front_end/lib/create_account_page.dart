@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:nightly_front_end/dashboard.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CreateAccountPage extends StatefulWidget {
   const CreateAccountPage({super.key});
