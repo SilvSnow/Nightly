@@ -31,8 +31,14 @@ class _MoonSwipeTabState extends State<MoonSwipeTab>
       partyFrequency: 4,
       budget: r'$$ - $$$',
       energyLevel: 5,
-      imageUrl:
-          'https://images.unsplash.com/photo-1566737236500-c8ac43014a67?auto=format&fit=crop&w=1200&q=80',
+      imageUrls: [
+        'https://images.unsplash.com/photo-1566737236500-c8ac43014a67?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1496337589254-7e19d01cec44?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1521334884684-d80222895322?auto=format&fit=crop&w=1200&q=80',
+      ],
       reviews: [
         _VenueReview(
           title: '212',
@@ -62,8 +68,14 @@ class _MoonSwipeTabState extends State<MoonSwipeTab>
       partyFrequency: 3,
       budget: r'$$ - $$$',
       energyLevel: 4,
-      imageUrl:
-          'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1200&q=80',
+      imageUrls: [
+        'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1524601500432-1e1a4c71d692?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1470229538611-16ba8c7ffbd7?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1505236858219-8359eb29e329?auto=format&fit=crop&w=1200&q=80',
+      ],
       reviews: [
         _VenueReview(
           title: 'BarChef',
@@ -93,8 +105,14 @@ class _MoonSwipeTabState extends State<MoonSwipeTab>
       partyFrequency: 5,
       budget: r'$$$',
       energyLevel: 5,
-      imageUrl:
-          'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200&q=80',
+      imageUrls: [
+        'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1524601500432-1e1a4c71d692?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1470229538611-16ba8c7ffbd7?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1521334884684-d80222895322?auto=format&fit=crop&w=1200&q=80',
+      ],
       reviews: [
         _VenueReview(
           title: 'The Keefer Bar',
@@ -371,6 +389,17 @@ class _MoonSwipeTabState extends State<MoonSwipeTab>
     );
   }
 
+  Widget _buildImageCarousel(List<String> imageUrls) {
+    final carouselImages = imageUrls.take(6).toList();
+    final showImages = carouselImages.isNotEmpty
+        ? carouselImages
+        : [
+            'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1200&q=80',
+          ];
+
+    return _ProfileImageCarousel(imageUrls: showImages);
+  }
+
   Widget _buildProfileCard(_GroupProfile profile) {
     return Stack(
       clipBehavior: Clip.none,
@@ -395,23 +424,7 @@ class _MoonSwipeTabState extends State<MoonSwipeTab>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(
-                    height: 360,
-                    width: double.infinity,
-                    child: Image.network(
-                      profile.imageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        color: Colors.grey.shade200,
-                        alignment: Alignment.center,
-                        child: Icon(
-                          Icons.image_not_supported_outlined,
-                          size: 42,
-                          color: Colors.grey.shade500,
-                        ),
-                      ),
-                    ),
-                  ),
+                  _buildImageCarousel(profile.imageUrls),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
                     child: Column(
@@ -756,7 +769,7 @@ class _GroupProfile {
   final int partyFrequency;
   final String budget;
   final int energyLevel;
-  final String imageUrl;
+  final List<String> imageUrls;
   final List<_VenueReview> reviews;
 
   const _GroupProfile({
@@ -770,9 +783,139 @@ class _GroupProfile {
     required this.partyFrequency,
     required this.budget,
     required this.energyLevel,
-    required this.imageUrl,
+    required this.imageUrls,
     required this.reviews,
   });
+}
+
+class _ProfileImageCarousel extends StatefulWidget {
+  final List<String> imageUrls;
+
+  const _ProfileImageCarousel({required this.imageUrls});
+
+  @override
+  State<_ProfileImageCarousel> createState() => _ProfileImageCarouselState();
+}
+
+class _ProfileImageCarouselState extends State<_ProfileImageCarousel> {
+  late final PageController _pageController;
+  int _currentImageIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _goToImage(int index) {
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final images = widget.imageUrls;
+
+    return SizedBox(
+      height: 360,
+      width: double.infinity,
+      child: Stack(
+        children: [
+          PageView.builder(
+            controller: _pageController,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: images.length,
+            onPageChanged: (index) {
+              setState(() {
+                _currentImageIndex = index;
+              });
+            },
+            itemBuilder: (context, index) {
+              return Image.network(
+                images[index],
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: Colors.grey.shade200,
+                  alignment: Alignment.center,
+                  child: Icon(
+                    Icons.image_not_supported_outlined,
+                    size: 42,
+                    color: Colors.grey.shade500,
+                  ),
+                ),
+              );
+            },
+          ),
+          if (images.length > 1)
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 0,
+              bottom: 0,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onTap: () {
+                        final previousIndex =
+                            (_currentImageIndex - 1 + images.length) %
+                            images.length;
+                        _goToImage(previousIndex);
+                      },
+                      child: const SizedBox.expand(),
+                    ),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onTap: () {
+                        final nextIndex =
+                            (_currentImageIndex + 1) % images.length;
+                        _goToImage(nextIndex);
+                      },
+                      child: const SizedBox.expand(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 12,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                images.length,
+                (index) => AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: _currentImageIndex == index ? 18 : 7,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: _currentImageIndex == index
+                        ? Colors.white
+                        : Colors.white.withOpacity(0.55),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _VenueReview {
